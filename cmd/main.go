@@ -44,6 +44,7 @@ func main() {
 		<-sigc
 		log.Info("Signal recieved, shutting down pinger instance.")
 		pinger.Shutdown()
+		pinger.PrintStats()
 		os.Exit(0)
 	}()
 

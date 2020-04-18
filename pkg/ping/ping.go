@@ -44,6 +44,8 @@ type Pinger struct {
 	// timer is the time used for calculation of RTT for the ICMP echo request
 	// reply cycle.
 	timer time.Time
+
+	stats *Stats
 }
 
 // NewPinger returns a new instance of Pinger with the host corresponding to the
@@ -69,6 +71,7 @@ func NewPinger(addr string) (*Pinger, error) {
 		shutdown:   make(chan bool),
 		maxRTT:     time.Second,
 		timer:      time.Now(),
+		stats:      NewStats(addr),
 	}, nil
 }
 
@@ -123,6 +126,8 @@ func (p *Pinger) sendIcmp() error {
 			}
 			break
 		}
+
+		p.stats.IncrementTxPackets()
 	}(p.conn, p.ipaddr, data)
 
 	return nil
@@ -175,7 +180,9 @@ func (p *Pinger) recvIcmp() error {
 					rtt = time.Since(p.timer)
 
 					log.Infof("%d bytes from %s: icmp_seq=%d ttl=%d time=%s",
-						packet.Len(proto), p.ipaddr.String(), p.seqNum, 53, rtt)
+						len, p.ipaddr.String(), p.seqNum, 53, rtt)
+					p.stats.AddRTT(rtt)
+					p.stats.IncrementRxPackets()
 					return nil
 				}
 			default:
@@ -219,4 +226,9 @@ func (p *Pinger) Run() error {
 // Shutdown shuts down the running pinger instance.
 func (p *Pinger) Shutdown() {
 	p.shutdown <- true
+}
+
+// PrintStats prints the statistics aggregated the pinger.
+func (p *Pinger) PrintStats() {
+	p.stats.Print()
 }
