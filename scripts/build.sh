@@ -16,7 +16,7 @@ REPO_PATH="github.com/fristonio/ping"
 GOBIN=$PWD go "${GO_CMD}" -o "${BUILD_NAME}" ${GO_FLAGS} "${REPO_PATH}/cmd"
 
 echo "[*] Setting capabilities for the binary"
-sudo setcap cap_net_raw=ep "${BUILD_NAME}"
+setcap cap_net_raw=ep "${BUILD_NAME}"
 
 echo "[*] Build Complete."
 exit 0
